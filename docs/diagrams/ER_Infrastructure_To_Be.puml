@@ -4,7 +4,7 @@
 
 entity Settlement {
     primary_key(id): UUID
-    name: VARCHAR
+    name: STRING
     location: STRING
     created_at: DATETIME
     updated_at: DATETIME
@@ -36,6 +36,7 @@ entity Device {
     primary_key(id): UUID
     foreign_key(room_id): UUID
     foreign_key(device_model_id): UUID -- Foreign key to DeviceModel
+    serial_number: STRING
     status: STRING
     created_at: DATETIME
     last_maintenance: DATETIME
@@ -65,9 +66,9 @@ entity InfrastructureUpdateTransactionalOutbox {
 
 entity DeviceModel {
     primary_key(id): UUID
-    model_name: VARCHAR -- Name or identifier of the device model
-    manufacturer: VARCHAR -- Manufacturer of the device
-    type: VARCHAR -- Type/category of the device (e.g., "Thermostat", "Camera")
+    model_name: STRING -- Name or identifier of the device model
+    manufacturer: STRING -- Manufacturer of the device
+    type: STRING -- Type/category of the device (e.g., "Thermostat", "Camera")
     specifications: JSONB -- Technical specs or features as a JSON blob
     created_at: TIMESTAMP
     updated_at: TIMESTAMP
@@ -76,16 +77,16 @@ entity DeviceModel {
 entity Event {
     primary_key(id): UUID
     foreign_key(device_id): UUID -- References Device
-    event_type: VARCHAR -- Type of event (e.g., "created", "updated")
+    event_type: STRING -- Type of event (e.g., "created", "updated")
     payload: JSONB -- Event data (e.g., changes or updates to the device)
     timestamp: TIMESTAMP
 }
 
 entity ModelEventMappings {
     primary_key(id): UUID
-    model_type: VARCHAR  -- Type of device model (e.g., "Thermostat", "Camera")
-    event_type: VARCHAR  -- Type of event (e.g., "created", "updated")
-    normalized_event_name: VARCHAR  -- Name of the normalized event
+    model_type: STRING  -- Type of device model (e.g., "Thermostat", "Camera")
+    event_type: STRING  -- Type of event (e.g., "created", "updated")
+    normalized_event_name: STRING  -- Name of the normalized event
     transformation_rule: JSONB  -- JSON rules for transformations
     created_at: TIMESTAMP
     updated_at: TIMESTAMP
