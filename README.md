@@ -90,6 +90,12 @@
 Описаны уровни Context, Container, Component модели C4 для архитектуры To Be.
 ER-диаграмма создана для микросервиса Infrastructure.
 
+### API
+
+Поскольку взаимодействие между микросервисами происходит только на основе событий, то есть косвенно: один микросервис ничего не знает про другой, – API описываем на примере пользовательского взаимодействия с микросервисом Infrastructure
+
+[Infrastructure Service OpenAPI specification](./docs/api/infrastructure-service-openapi.yaml)
+
 # Базовая настройка
 
 ## Запуск minikube
