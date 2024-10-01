@@ -1,0 +1,31 @@
+@startuml
+title Smart Home Context Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User", "A user of the smart home system")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System(SmartHomeSystem, "SmartHome System", "System for controlling and monitoring smart home devices remotely")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(s3, "S3-compatible Object Storage", "Stores video and snapshots from cameras")
+
+System_Ext(cdn, "CDN", "Delivers static content fast around the world (frontend, video and snapshots)")
+
+Rel(user, web, "Uses the system")
+Rel(web, SmartHomeSystem, "Perform commands")
+Rel(web, SmartHomeSystem, "Gets data")
+Rel(user, web, "Set up devices")
+Rel(user, devices, "Set up")
+Rel(devices,SmartHomeSystem,"Publishes current data")
+Rel(SmartHomeSystem,devices,"Sends commands")
+Rel(devices,s3,"Save video and snapshots")
+Rel(cdn,s3,"Get originals")
+Rel(SmartHomeSystem,cdn,"Signs url for getting video and snapshots")
+
+@enduml

@@ -16,7 +16,8 @@ System_Ext(heating, "Heating Systems", "External API for controlling heating sys
 System_Ext(tempSensor, "Temperature Sensors", "External API for retrieving temperature data")
 
 Rel(user, web, "Uses the system")
-Rel(web, SmartHomeSystem, "Perform commands")
+Rel(web, SmartHomeSystem, "Performs commands")
+Rel(web, SmartHomeSystem, "Gets data")
 Rel(installationEngineer, SmartHomeSystem, "Set up devices")
 Rel(installationEngineer, heating, "Set up devices")
 Rel(installationEngineer, tempSensor, "Set up devices")

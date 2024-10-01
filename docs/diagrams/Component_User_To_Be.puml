@@ -1,0 +1,73 @@
+@startuml "SmartHomeSystem"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System_Boundary(c1, "SmartHome System") {
+    Container(mqtt, "Low-level Pub/Sub Broker", "Eclipse Mosquitto MQTT Broker") {
+        Component(mqttBroker, "Eclipse Mosquitto", "Message Broker")
+        Component(mqttDevicesUpdate, "Device Access Update Consumer", "Consumer")
+    }
+    Container(broker, "Message Broker", "Apache Kafka broker", "") {
+        Component(kafka, "Apache Kafka", "Message Broker")
+        Component(mqttKafka, "Apache Kafka MQTT Connector", "Message Broker Connector")
+        Component(mqttSinkKafka, "Apache Kafka MQTT Sink", "Message Broker Connector")
+    }
+
+    Container(ag, "API Gateway", "", "")
+
+    Container(userService, "User Service", "Java", "Identity, event-based rights management", $tags="microService") {
+        Component(userServiceSignInController, "Sign In Controller", "REST API Controller")
+        Component(userServiceSignUpController, "Sign Up Controller", "REST API Controller")
+        Component(userServiceGetUserProfileController, "Get User Profile Controller", "REST API Controller")
+        Component(userServiceUpdateUserProfileController, "Update User Profile Controller", "REST API Controller")
+        Component(userServiceRefreshController, "Refresh Controller", "REST API Controller")
+
+        Component(userServiceUserUpdateProducer, "User Update Pull Publisher","Message Producer","Publishes updates on create and update user")
+        Component(userServiceUserAclUpdateProducer, "User ACL Update Pull Publisher","Message Producer","Publishes messages on update of user ACLs")
+
+        Component(userServiceUserAssignConsumer, "User To Home Assign Consumer", "Message Consumer", "Rebuild User ACLs on User To Home Assignment Changes")
+    }
+    ContainerDb(userDb, "User Database", "MongoDB", "Stores user profile and identity data, infrastructure read model (for user relations with houses) and resulting ACLs", $tags = "storage")
+    ContainerDb(userCacheDb, "JWT Refresh Tokens Database", "Redis", "Stores JWT refresh tokens", $tags = "storage")
+}
+
+Rel(devices, mqttBroker, "Publish metrics data, state changes, etc.", "MQTT")
+Rel(devices, mqttBroker, "Consume commands", "MQTT")
+
+Rel(mqttKafka, kafka, "Publishes devices events")
+Rel(mqttKafka, mqttBroker, "Consumes devices events")
+Rel(mqttSinkKafka, mqttBroker, "Publish commands")
+Rel(mqttSinkKafka, kafka, "Consumes commands")
+Rel(mqttDevicesUpdate, kafka, "Consumes devices topology events")
+Rel(mqttDevicesUpdate, mqttBroker, "Adds devices permissions based on events")
+
+Rel(userServiceUserUpdateProducer, kafka, "Publishes user update events")
+Rel(userServiceUserUpdateProducer, userDb, "Requests data from")
+Rel(userServiceUserAclUpdateProducer, kafka, "Publishes user ACL update events")
+Rel(userServiceUserAclUpdateProducer, userDb, "Requests data from")
+Rel(userServiceUserAssignConsumer, kafka, "Consumes events")
+Rel(userServiceUserAssignConsumer, userDb, "Saves data to")
+Rel(userServiceRefreshController, userCacheDb, "Requests data from")
+Rel(userServiceSignInController, userCacheDb, "Adds data to")
+Rel(userServiceSignUpController, userCacheDb, "Adds data to")
+Rel(userServiceSignUpController, userDb, "Adds data to")
+Rel(userServiceSignInController, userDb, "Saves data to")
+Rel(userServiceUpdateUserProfileController, userDb, "Saves data to")
+Rel(userServiceGetUserProfileController, userDb, "Requests data from")
+
+Rel(ag, userServiceSignInController, "Requests data")
+Rel(ag, userServiceSignUpController, "Requests data")
+Rel(ag, userServiceUpdateUserProfileController, "Requests data")
+Rel(ag, userServiceGetUserProfileController, "Requests data")
+Rel(ag, userServiceRefreshController, "Requests data")
+
+Rel(web, ag, "Perform commands")
+Rel(web, ag, "Gets data")
+
+@enduml

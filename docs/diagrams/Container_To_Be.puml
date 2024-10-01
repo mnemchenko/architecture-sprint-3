@@ -1,0 +1,96 @@
+@startuml "SmartHomeSystem"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System_Ext(s3, "S3-compatible Object Storage", "Stores video and snapshots from cameras")
+
+System_Ext(cdn, "CDN", "Delivers static content fast around the world (frontend, video and snapshots)")
+
+System_Boundary(c1, "SmartHome System") {
+    Container(mqtt, "Low-level Pub/Sub Broker", "Eclipse Mosquitto MQTT Broker", "Ensures reliable messaging, supports lightweight protocols suitable for IoT devices with limited bandwidth or processing power")
+    Container(broker, "Message Broker", "Apache Kafka broker", "")
+
+    Container(ag, "API Gateway", "", "")
+
+    Container(userService, "User Service", "Java", "Identity, event-based rights management", $tags="microService")
+    ContainerDb(userDb, "User Database", "MongoDB", "Stores user profile and identity data, infrastructure read model (for user relations with houses) and resulting ACLs", $tags = "storage")
+    ContainerDb(userCacheDb, "JWT Refresh Tokens Database", "Redis", "Stores JWT refresh tokens", $tags = "storage")
+
+    Container(infrastructureService, "Infrastructure Service", "Java", "Structure of settlements, houses in them, rooms, devices, direct control of devices, last data by devices", $tags="microService")
+    ContainerDb(infrastructureDb, "Infrastructure Database", "MongoDB", "Stores infrastructure hierarchy & devices identity data", $tags = "storage")
+
+    Container(telemetryService, "Telemetry Service", "Java", "", $tags="microService")
+    ContainerDb(telemetryDb, "Telemetry Database", "InfluxDB", "Stores telemetry historical data", $tags = "storage")
+
+    Container(auditService, "Audit Service", "Java", "Keep history of audit events", $tags="microService")
+    ContainerDb(auditDb, "Audit Database", "MongoDB", "Stores infrastructure audit events, user read model data", $tags = "storage")
+
+    Container(climateControlService, "Climate Control Service", "Java", "", $tags="microService")
+    ContainerDb(climateControlDb, "Climate Control Database", "MongoDB", "Stores climate control preferences data (desired temperature, humidity level and other parameters for different rooms or zones: night temperature, comfort range for a particular time of day, etc.), read model for infrastructure", $tags = "storage")
+
+    Container(lightningControlService, "Lightning Control Service", "Java", "", $tags="microService")
+    ContainerDb(lightningControlDb, "Lightning Control Database", "MongoDB", "Stores lightning control preferences data, read model for infrastructure", $tags = "storage")
+
+    Container(accessControlService, "Access Control Service", "Java", "", $tags="microService")
+    ContainerDb(accessControlDb, "Access Control Database", "MongoDB", "Stores access control preferences data (e.g. access rules for users by timeframes, temporary access codes, etc.)", $tags = "storage")
+
+    Container(surveillanceControlService, "Surveillance Control Service", "Java", "", $tags="microService")
+    ContainerDb(surveillanceDb, "Surveillance Database", "MongoDB", "Stores surveillance control events metadata and video records registry", $tags = "storage")
+}
+
+Rel_D(devices, mqtt, "Publish metrics data, state changes, etc.", "MQTT")
+Rel_D(devices, mqtt, "Consume commands", "MQTT")
+
+Rel_R(mqtt, broker, "Publish devices events")
+Rel_L(broker, mqtt, "Publish commands")
+Rel_L(mqtt, broker, "Adds devices permissions based on events")
+
+Rel_U(telemetryService, broker, "Sub events")
+Rel_D(telemetryService, telemetryDb, "Stores data in")
+
+Rel_U(userService, broker, "Pub/Sub events")
+Rel_D(userService, userDb, "Stores data in")
+Rel_D(userService, userCacheDb, "Stores data in")
+
+Rel_U(infrastructureService, broker, "Pub/Sub events")
+Rel_U(infrastructureService, broker, "Retrieves last values for devices form streams")
+Rel_D(infrastructureService, infrastructureDb, "Stores data in")
+
+Rel_U(climateControlService, broker, "Pub/Sub events")
+Rel_D(climateControlService, climateControlDb, "Stores data in")
+
+Rel_U(lightningControlService, broker, "Pub/Sub events")
+Rel_D(lightningControlService, lightningControlDb, "Stores data in")
+
+Rel_U(accessControlService, broker, "Pub/Sub events")
+Rel_D(accessControlService, accessControlDb, "Stores data in")
+
+Rel_U(surveillanceControlService, broker, "Pub/Sub events")
+Rel_D(surveillanceControlService, surveillanceDb, "Stores data in")
+
+Rel_U(auditService, broker, "Sub events")
+Rel_D(auditService, auditDb, "Stores data in")
+
+Rel(devices,s3,"Save video and snapshots")
+Rel(cdn,s3,"Get originals")
+Rel(surveillanceControlService,cdn,"Signs url for getting video and snapshots")
+
+Rel_U(ag, userService, "Requests data")
+Rel_U(ag, infrastructureService, "Requests data")
+Rel_U(ag, telemetryService, "Requests data")
+Rel_U(ag, auditService, "Requests data")
+Rel_U(ag, climateControlService, "Requests data")
+Rel_U(ag, lightningControlService, "Requests data")
+Rel_U(ag, accessControlService, "Requests data")
+Rel_U(ag, surveillanceControlService, "Requests data")
+
+Rel_U(web, ag, "Perform commands")
+Rel_U(web, ag, "Gets data")
+
+@enduml

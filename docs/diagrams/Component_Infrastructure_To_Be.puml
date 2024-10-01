@@ -1,0 +1,110 @@
+@startuml "SmartHomeSystem"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System_Boundary(c1, "SmartHome System") {
+    Container(mqtt, "Low-level Pub/Sub Broker", "Eclipse Mosquitto MQTT Broker") {
+        Component(mqttBroker, "Eclipse Mosquitto", "Message Broker")
+        Component(mqttDevicesUpdate, "Device Access Update Consumer", "Consumer")
+    }
+    Container(broker, "Message Broker", "Apache Kafka broker", "") {
+        Component(kafka, "Apache Kafka", "Message Broker")
+        Component(mqttKafka, "Apache Kafka MQTT Connector", "Message Broker Connector")
+        Component(mqttSinkKafka, "Apache Kafka MQTT Sink", "Message Broker Connector")
+    }
+
+    Container(ag, "API Gateway", "", "")
+
+    Container(infrastructureService, "Infrastructure Service", "Java", "Structure of settlements, houses in them, rooms, devices, direct control of devices, last data by devices", $tags="microService"){
+        Component(infrastructureServiceCreateSettlementController, "Create Settlement Controller", "REST API Controller")
+        Component(infrastructureServiceGetSettlementListController, "Get Settlement List Controller", "REST API Controller")
+        Component(infrastructureServiceGetSettlementController, "Get Settlement Controller", "REST API Controller")
+        Component(infrastructureServiceUpdateSettlementController, "Update Settlement Controller", "REST API Controller")
+        Component(infrastructureServiceDeleteSettlementController, "Delete Settlement Controller", "REST API Controller")
+
+        Component(infrastructureServiceCreateHomeController, "Create Home Controller", "REST API Controller")
+        Component(infrastructureServiceGetHomeListController, "Get Home List Controller", "REST API Controller")
+        Component(infrastructureServiceGetHomeController, "Get Home Controller", "REST API Controller")
+        Component(infrastructureServiceUpdateHomeController, "Update Home Controller", "REST API Controller")
+        Component(infrastructureServiceDeleteHomeController, "Delete Home Controller", "REST API Controller")
+
+        Component(infrastructureServiceCreateDeviceController, "Create Device Controller", "REST API Controller")
+        Component(infrastructureServiceGetDeviceController, "Get Device Controller", "REST API Controller")
+        Component(infrastructureServiceGetDeviceLastValueController, "Get Device Last Value Controller", "REST API Controller")
+        Component(infrastructureServiceGetDeviceListController, "Get Device List Controller", "REST API Controller")
+        Component(infrastructureServiceUpdateDeviceController, "Update Device Controller", "REST API Controller")
+        Component(infrastructureServiceDeleteDeviceController, "Delete Device Controller", "REST API Controller")
+        Component(infrastructureServiceAssignUserToHomeController, "Assign User To Home Controller", "REST API Controller")
+        Component(infrastructureServiceRevokeUserFromHomeController, "Revoke User From Home Controller", "REST API Controller")
+
+        Component(infrastructureServiceInfrastructureUpdateProducer, "Infrastructure Update Pull Publisher","","Publishes updates on changes in infrastructure")
+
+        Component(telemetryServiceUserAclUpdatesConsumer, "User Acl Updates Consumer")
+        Component(telemetryServiceUserAclUpdatesConsumer, "Device normalize events consumers set", "Consumers set", "Receives device events in native format and normalize to internal system format")
+    }
+    ContainerDb(infrastructureDb, "Infrastructure Database", "MongoDB", "Stores infrastructure hierarchy & devices identity data", $tags = "storage")
+}
+
+Rel(devices, mqttBroker, "Publish metrics data, state changes, etc.", "MQTT")
+Rel(devices, mqttBroker, "Consume commands", "MQTT")
+
+Rel(mqttKafka, kafka, "Publishes devices events")
+Rel(mqttKafka, mqttBroker, "Consumes devices events")
+Rel(mqttSinkKafka, mqttBroker, "Publish commands")
+Rel(mqttSinkKafka, kafka, "Consumes commands")
+Rel(mqttDevicesUpdate, kafka, "Consumes devices topology events")
+Rel(mqttDevicesUpdate, mqttBroker, "Adds devices permissions based on events")
+
+Rel(infrastructureServiceGetDeviceLastValueController, kafka, "Retrieves last values for devices form streams")
+Rel(telemetryServiceUserAclUpdatesConsumer, kafka, "Consumes events")
+Rel(telemetryServiceUserAclUpdatesConsumer, kafka, "Produces events")
+Rel(telemetryServiceUserAclUpdatesConsumer, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceCreateSettlementController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceGetSettlementListController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceGetSettlementController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceUpdateSettlementController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceDeleteSettlementController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceCreateHomeController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceGetHomeListController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceGetHomeController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceUpdateHomeController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceDeleteHomeController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceCreateDeviceController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceAssignUserToHomeController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceRevokeUserFromHomeController, infrastructureDb, "Stores data in")
+Rel(infrastructureServiceInfrastructureUpdateProducer, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceGetDeviceListController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceGetDeviceController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceUpdateDeviceController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceDeleteDeviceController, infrastructureDb, "Requests data from")
+Rel(infrastructureServiceInfrastructureUpdateProducer, kafka, "Publishes infrastructure changed events")
+
+Rel(ag, infrastructureServiceCreateSettlementController, "Requests data")
+Rel(ag, infrastructureServiceGetSettlementListController, "Requests data")
+Rel(ag, infrastructureServiceGetSettlementController, "Requests data")
+Rel(ag, infrastructureServiceUpdateSettlementController, "Requests data")
+Rel(ag, infrastructureServiceDeleteSettlementController, "Requests data")
+Rel(ag, infrastructureServiceGetDeviceController, "Requests data")
+Rel(ag, infrastructureServiceGetDeviceListController, "Requests data")
+Rel(ag, infrastructureServiceUpdateDeviceController, "Requests data")
+Rel(ag, infrastructureServiceDeleteDeviceController, "Requests data")
+Rel(ag, infrastructureServiceCreateHomeController, "Requests data")
+Rel(ag, infrastructureServiceGetHomeListController, "Requests data")
+Rel(ag, infrastructureServiceGetHomeController, "Requests data")
+Rel(ag, infrastructureServiceUpdateHomeController, "Requests data")
+Rel(ag, infrastructureServiceDeleteHomeController, "Requests data")
+Rel(ag, infrastructureServiceCreateDeviceController, "Requests data")
+Rel(ag, infrastructureServiceAssignUserToHomeController, "Requests data")
+Rel(ag, infrastructureServiceRevokeUserFromHomeController, "Requests data")
+Rel(ag, infrastructureServiceGetDeviceLastValueController, "Requests data")
+
+Rel(web, ag, "Perform commands")
+Rel(web, ag, "Gets data")
+
+@enduml

@@ -1,0 +1,79 @@
+@startuml "SmartHomeSystem"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System_Boundary(c1, "SmartHome System") {
+    Container(mqtt, "Low-level Pub/Sub Broker", "Eclipse Mosquitto MQTT Broker") {
+        Component(mqttBroker, "Eclipse Mosquitto", "Message Broker")
+        Component(mqttDevicesUpdate, "Device Access Update Consumer", "Consumer")
+    }
+    Container(broker, "Message Broker", "Apache Kafka broker", "") {
+        Component(kafka, "Apache Kafka", "Message Broker")
+        Component(mqttKafka, "Apache Kafka MQTT Connector", "Message Broker Connector")
+        Component(mqttSinkKafka, "Apache Kafka MQTT Sink", "Message Broker Connector")
+    }
+
+    Container(ag, "API Gateway", "", "")
+
+    Container(lightningControlService, "Lightning Control Service", "Java", "", $tags="microService") {
+        Component(lightningControlServiceGetZonesController, "Get Lightning Zones List Controller", "REST API Controller")
+        Component(lightningControlServiceCreateZoneController, "Create Lightning Zone Controller", "REST API Controller")
+        Component(lightningControlServiceUpdateZoneController, "Update Lightning Zone Controller", "REST API Controller")
+        Component(lightningControlServiceDeleteZoneController, "Delete Lightning Zone Controller", "REST API Controller")
+        Component(lightningControlServiceAttachDeviceToZoneController, "Attach Device To Lightning Zone Controller", "REST API Controller")
+        Component(lightningControlServiceDetachDeviceToZoneController, "Detach Device From Lightning Zone Controller", "REST API Controller")
+        Component(lightningControlServiceSetZoneDesiredSettingsController, "Set Lightning Zone Desired Settings Controller", "REST API Controller")
+        Component(lightningControlServiceGetZoneDesiredSettingsController, "Get Lightning Zone Desired Settings Controller", "REST API Controller")
+
+        Component(lightningControlServiceSettingsChangedEventsProducer, "Lightning Settings Changed Events Pull Publisher","Message Producer","Publishes events on settings change")
+
+        Component(lightningControlServiceInfrastructureUpdatesConsumer, "Infrastructure Updates Consumer")
+        Component(lightningControlServiceUserAclUpdatesConsumer, "User Acl Updates Consumer")
+    }
+    ContainerDb(lightningControlDb, "Lightning Control Database", "MongoDB", "Stores lightning control preferences data, read model for infrastructure", $tags = "storage")
+}
+
+Rel(devices, mqttBroker, "Publish metrics data, state changes, etc.", "MQTT")
+Rel(devices, mqttBroker, "Consume commands", "MQTT")
+
+Rel(mqttKafka, kafka, "Publishes devices events")
+Rel(mqttKafka, mqttBroker, "Consumes devices events")
+Rel(mqttSinkKafka, mqttBroker, "Publish commands")
+Rel(mqttSinkKafka, kafka, "Consumes commands")
+Rel(mqttDevicesUpdate, kafka, "Consumes devices topology events")
+Rel(mqttDevicesUpdate, mqttBroker, "Adds devices permissions based on events")
+
+Rel(lightningControlServiceInfrastructureUpdatesConsumer, kafka, "Consumes events")
+Rel(lightningControlServiceUserAclUpdatesConsumer, kafka, "Consumes events")
+Rel(lightningControlServiceSettingsChangedEventsProducer, kafka, "Publishes events")
+Rel(lightningControlServiceUserAclUpdatesConsumer, lightningControlDb, "Saves data to")
+Rel(lightningControlServiceInfrastructureUpdatesConsumer, lightningControlDb, "Saves data to")
+Rel(lightningControlServiceSettingsChangedEventsProducer, lightningControlDb, "Requests data from")
+Rel(lightningControlServiceGetZonesController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceCreateZoneController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceUpdateZoneController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceDeleteZoneController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceAttachDeviceToZoneController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceDetachDeviceToZoneController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceSetZoneDesiredSettingsController, lightningControlDb, "Stores data in")
+Rel(lightningControlServiceGetZoneDesiredSettingsController, lightningControlDb, "Stores data in")
+
+Rel(ag, lightningControlServiceGetZonesController, "Requests data")
+Rel(ag, lightningControlServiceCreateZoneController, "Requests data")
+Rel(ag, lightningControlServiceUpdateZoneController, "Requests data")
+Rel(ag, lightningControlServiceDeleteZoneController, "Requests data")
+Rel(ag, lightningControlServiceAttachDeviceToZoneController, "Requests data")
+Rel(ag, lightningControlServiceDetachDeviceToZoneController, "Requests data")
+Rel(ag, lightningControlServiceSetZoneDesiredSettingsController, "Requests data")
+Rel(ag, lightningControlServiceGetZoneDesiredSettingsController, "Requests data")
+
+Rel(web, ag, "Perform commands")
+Rel(web, ag, "Gets data")
+
+@enduml
