@@ -1,0 +1,19 @@
+version: "3.2"
+
+services:
+  mongodb:
+    image: "mongo"
+    environment:
+      MONGO_INITDB_DATABASE: "smart-home-infrastructure"
+      MONGO_INITDB_ROOT_USERNAME: "smart-home-infrastructure"
+      MONGO_INITDB_ROOT_PASSWORD: "123456"
+    volumes:
+      - .docker/dev/mongo-volume:/data/db
+    networks:
+      - ledger
+    ports:
+      - "27017-27019:27017-27019"
+
+networks:
+  ledger:
+    driver: bridge

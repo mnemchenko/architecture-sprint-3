@@ -1,0 +1,36 @@
+<!-- This file is shared between projects and contains shared configuretions and dependencies -->
+<Project>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StyleCopRules.ruleset</CodeAnalysisRuleSet>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StyleCopRules.ruleset</CodeAnalysisRuleSet>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='FullDebug|AnyCPU'">
+        <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)StyleCopRules.ruleset</CodeAnalysisRuleSet>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('Handlers'))">
+        <Content Include="$(SolutionDir)appsettings.Shared.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Always"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('Tests'))">
+        <PackageReference Include="coverlet.collector" Version="3.2.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="JunitXml.TestLogger" Version="3.0.134"/>
+    </ItemGroup>
+</Project>

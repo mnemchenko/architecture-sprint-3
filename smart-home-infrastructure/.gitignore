@@ -1,0 +1,11 @@
+bin/
+!.cdk/bin
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+SmartHomeInfrastructure.sln.DotSettings.user
+.idea
+.docker/dev/mongo-volume
+tests/**/TestResults
+Cobertura.xml
