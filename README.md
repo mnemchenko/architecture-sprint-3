@@ -98,6 +98,21 @@ ER-диаграмма создана для микросервиса Infrastruct
 
 # Базовая настройка
 
+## Запуск микросервисов Infrastructure и Telemetry для проверки
+
+- Перейти в парку решения
+- Запустить docker compose
+```shell
+docker-compose up -d
+```
+- Установить пакеты
+```shell
+dotnet restore
+```
+- Открыть solution в IDE (например Rider)
+- Запустить проект src/Handlers/Handler.WebApi
+- В браузере откроется окно со swagger
+
 ## Запуск minikube
 
 [Инструкция по установке](https://minikube.sigs.k8s.io/docs/start/)
