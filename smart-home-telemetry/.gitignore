@@ -1,0 +1,11 @@
+bin/
+!.cdk/bin
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+SmartHomeTelemetry.sln.DotSettings.user
+.idea
+.docker/dev/influxdb-data
+tests/**/TestResults
+Cobertura.xml

@@ -1,0 +1,99 @@
+@startuml
+!define primary_key(x) <b><color:yellowgreen>x</color></b>
+!define foreign_key(x) <color:orange>x</color>
+
+entity Settlement {
+    primary_key(id): UUID
+    name: STRING
+    location: STRING
+    created_at: DATETIME
+    updated_at: DATETIME
+}
+
+entity House {
+    primary_key(id): UUID
+    foreign_key(settlement_id): UUID
+    address: STRING
+    owner_id: UUID
+    created_at: DATETIME
+    updated_at: DATETIME
+}
+
+Settlement ||--{  House : contains
+
+entity Room {
+    primary_key(id): UUID
+    foreign_key(house_id): UUID
+    name: STRING
+    floor: INT
+    created_at: DATETIME
+    updated_at: DATETIME
+}
+
+House ||--{ Room : contains
+
+entity Device {
+    primary_key(id): UUID
+    foreign_key(room_id): UUID
+    foreign_key(device_model_id): UUID -- Foreign key to DeviceModel
+    serial_number: STRING
+    status: STRING
+    created_at: DATETIME
+    last_maintenance: DATETIME
+}
+
+Room ||--{ Device : contains
+
+entity User {
+    primary_key(id): UUID
+    name: STRING
+    email: STRING
+    role: STRING
+    created_at: DATETIME
+    updated_at: DATETIME
+}
+
+User }--{ House : attached
+
+entity InfrastructureUpdateTransactionalOutbox {
+    primary_key(event_id): UUID
+    event_type: STRING
+    payload: JSON
+    created_at: DATETIME
+    processed_at: DATETIME
+    status: STRING
+}
+
+entity DeviceModel {
+    primary_key(id): UUID
+    model_name: STRING -- Name or identifier of the device model
+    manufacturer: STRING -- Manufacturer of the device
+    type: STRING -- Type/category of the device (e.g., "Thermostat", "Camera")
+    specifications: JSONB -- Technical specs or features as a JSON blob
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+entity Event {
+    primary_key(id): UUID
+    foreign_key(device_id): UUID -- References Device
+    event_type: STRING -- Type of event (e.g., "created", "updated")
+    payload: JSONB -- Event data (e.g., changes or updates to the device)
+    timestamp: TIMESTAMP
+}
+
+entity ModelEventMappings {
+    primary_key(id): UUID
+    model_type: STRING  -- Type of device model (e.g., "Thermostat", "Camera")
+    event_type: STRING  -- Type of event (e.g., "created", "updated")
+    normalized_event_name: STRING  -- Name of the normalized event
+    transformation_rule: JSONB  -- JSON rules for transformations
+    created_at: TIMESTAMP
+    updated_at: TIMESTAMP
+}
+
+DeviceModel ||--o{ Device : "is instance of"
+Device ||--o{ Event : "generates"
+ModelEventMappings ||--|| Event : "maps to"
+
+@enduml

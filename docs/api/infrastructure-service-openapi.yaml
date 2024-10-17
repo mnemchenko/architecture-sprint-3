@@ -1,0 +1,347 @@
+openapi: 3.0.1
+info:
+  title: Smart House Infrastructure Service API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /settlements:
+    get:
+      summary: Get a list of settlements
+      tags:
+        - Settlement
+      responses:
+        '200':
+          description: A list of settlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Settlement'
+    post:
+      summary: Create a new settlement
+      tags:
+        - Settlement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settlement'
+      responses:
+        '201':
+          description: Settlement created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settlement'
+
+  /settlements/{id}:
+    get:
+      summary: Get settlement details
+      tags:
+        - Settlement
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the settlement
+      responses:
+        '200':
+          description: Settlement details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settlement'
+    put:
+      summary: Update a settlement
+      tags:
+        - Settlement
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the settlement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settlement'
+      responses:
+        '200':
+          description: Settlement updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settlement'
+    delete:
+      summary: Delete a settlement
+      tags:
+        - Settlement
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the settlement
+      responses:
+        '204':
+          description: Settlement deleted
+
+  /houses:
+    get:
+      summary: Get a list of houses
+      tags:
+        - House
+      parameters:
+        - in: query
+          name: settlement_id
+          schema:
+            type: string
+          required: true
+          description: UUID of the settlement
+      responses:
+        '200':
+          description: A list of houses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/House'
+    post:
+      summary: Create a new house
+      tags:
+        - House
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/House'
+      responses:
+        '201':
+          description: House created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/House'
+
+  /houses/{id}:
+    get:
+      summary: Get house details
+      tags:
+        - House
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the house
+      responses:
+        '200':
+          description: House details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/House'
+    put:
+      summary: Update a house
+      tags:
+        - House
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the house
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/House'
+      responses:
+        '200':
+          description: House updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/House'
+    delete:
+      summary: Delete a house
+      tags:
+        - House
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the house
+      responses:
+        '204':
+          description: House deleted
+
+  /devices:
+    get:
+      summary: Get a list of devices
+      tags:
+        - Device
+      parameters:
+        - in: query
+          name: house_id
+          schema:
+            type: string
+          required: true
+          description: UUID of the house
+      responses:
+        '200':
+          description: A list of devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+    post:
+      summary: Create a new device
+      tags:
+        - Device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        '201':
+          description: Device created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+
+  /devices/{id}:
+    get:
+      summary: Get device details
+      tags:
+        - Device
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the device
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    put:
+      summary: Update a device
+      tags:
+        - Device
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the device
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        '200':
+          description: Device updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+    delete:
+      summary: Delete a device
+      tags:
+        - Device
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: UUID of the device
+      responses:
+        '204':
+          description: Device deleted
+
+components:
+  schemas:
+    Settlement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        location:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    House:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        settlement_id:
+          type: string
+          format: uuid
+        address:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        room_id:
+          type: string
+          format: uuid
+        device_model_id:
+          type: string
+          format: uuid
+        serial_number:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        last_maintenance:
+          type: string
+          format: date-time

@@ -1,0 +1,33 @@
+version: "3.2"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .docker/deploy/Handler.WebApi/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTIONSTRINGS__MONGODB=mongodb://smart-home-infrastructure:123456@mongodb:27017/smart-home-infrastructure?authSource=admin
+    networks:
+      - ledger
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: "mongo"
+    environment:
+      MONGO_INITDB_DATABASE: "smart-home-infrastructure"
+      MONGO_INITDB_ROOT_USERNAME: "smart-home-infrastructure"
+      MONGO_INITDB_ROOT_PASSWORD: "123456"
+    volumes:
+      - .docker/dev/mongo-volume:/data/db
+    networks:
+      - ledger
+    ports:
+      - "27017-27019:27017-27019"
+
+networks:
+  ledger:
+    driver: bridge

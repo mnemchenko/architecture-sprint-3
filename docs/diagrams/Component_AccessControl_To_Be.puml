@@ -1,0 +1,85 @@
+@startuml "SmartHomeSystem"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="micro service\neight sided")
+AddElementTag("storage", $shape=RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+
+System_Ext(devices, "Devices", "The actual smart home devices, such as sensors, thermostats, lights, and cameras")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for smart home control and management capabilities")
+
+System_Boundary(c1, "SmartHome System") {
+    Container(mqtt, "Low-level Pub/Sub Broker", "Eclipse Mosquitto MQTT Broker") {
+        Component(mqttBroker, "Eclipse Mosquitto", "Message Broker")
+        Component(mqttDevicesUpdate, "Device Access Update Consumer", "Consumer")
+    }
+    Container(broker, "Message Broker", "Apache Kafka broker", "") {
+        Component(kafka, "Apache Kafka", "Message Broker")
+        Component(mqttKafka, "Apache Kafka MQTT Connector", "Message Broker Connector")
+        Component(mqttSinkKafka, "Apache Kafka MQTT Sink", "Message Broker Connector")
+    }
+
+    Container(ag, "API Gateway", "", "")
+
+    Container(accessControlService, "Access Control Service", "Java", "", $tags="microService") {
+        Component(accessControlServiceGrantZoneAccessController, "Grant Zone Access Controller", "REST API Controller")
+        Component(accessControlServiceRevokeZoneAccessController, "Revoke Zone Access Controller", "REST API Controller")
+        Component(accessControlServiceGetZoneAccessListController, "Get Zone Access List Controller", "REST API Controller")
+        Component(accessControlServiceGenerateOtpController, "Generate One-Time-Password Controller", "REST API Controller")
+        Component(accessControlServiceRevokeOtpController, "Revoke One-Time-Password Controller", "REST API Controller")
+        Component(accessControlServiceAddKeyController, "Add Key Controller", "REST API Controller")
+        Component(accessControlServiceDeleteKeyController, "Delete Key Controller", "REST API Controller")
+        Component(accessControlServiceAssignKeyController, "Assign Key Controller", "REST API Controller")
+        Component(accessControlServiceGetKeyListController, "Get Keys List Controller", "REST API Controller")
+
+        Component(userServiceOtpEventsProducer, "OTP Events Pull Publisher","Message Producer","Publishes events on OTP creation")
+        Component(userServiceAccessChangedEventsProducer, "Access Changed Events Pull Publisher","Message Producer","Publishes events on OTP creation")
+
+        Component(accessControlServiceInfrastructureUpdatesConsumer, "Infrastructure Updates Consumer")
+        Component(accessControlServiceUserAclUpdatesConsumer, "User Acl Updates Consumer")
+    }
+    ContainerDb(accessControlDb, "Access Control Database", "MongoDB", "Stores access control preferences data (e.g. access rules for users by timeframes, temporary access codes, etc.)", $tags = "storage")
+}
+
+Rel(devices, mqttBroker, "Publish metrics data, state changes, etc.", "MQTT")
+Rel(devices, mqttBroker, "Consume commands", "MQTT")
+
+Rel(mqttKafka, kafka, "Publishes devices events")
+Rel(mqttKafka, mqttBroker, "Consumes devices events")
+Rel(mqttSinkKafka, mqttBroker, "Publish commands")
+Rel(mqttSinkKafka, kafka, "Consumes commands")
+Rel(mqttDevicesUpdate, kafka, "Consumes devices topology events")
+Rel(mqttDevicesUpdate, mqttBroker, "Adds devices permissions based on events")
+
+Rel(accessControlServiceInfrastructureUpdatesConsumer, kafka, "Consumes events")
+Rel(accessControlServiceUserAclUpdatesConsumer, kafka, "Consumes events")
+Rel(userServiceOtpEventsProducer, kafka, "Publishes events")
+Rel(userServiceAccessChangedEventsProducer, kafka, "Publishes events")
+Rel(accessControlServiceGenerateOtpController, accessControlDb, "Stores data in")
+Rel(accessControlServiceRevokeOtpController, accessControlDb, "Stores data in")
+Rel(accessControlServiceUserAclUpdatesConsumer, accessControlDb, "Saves data to")
+Rel(accessControlServiceInfrastructureUpdatesConsumer, accessControlDb, "Saves data to")
+Rel(userServiceOtpEventsProducer, accessControlDb, "Requests data from")
+Rel(userServiceAccessChangedEventsProducer, accessControlDb, "Requests data from")
+Rel(accessControlServiceAddKeyController, accessControlDb, "Saves data to")
+Rel(accessControlServiceDeleteKeyController, accessControlDb, "Saves data to")
+Rel(accessControlServiceAssignKeyController, accessControlDb, "Saves data to")
+Rel(accessControlServiceGrantZoneAccessController, accessControlDb, "Saves data to")
+Rel(accessControlServiceRevokeZoneAccessController, accessControlDb, "Saves data to")
+Rel(accessControlServiceGetKeyListController, accessControlDb, "Requests data from")
+Rel(accessControlServiceGetZoneAccessListController, accessControlDb, "Requests data from")
+
+Rel(ag, accessControlServiceGenerateOtpController, "Requests data")
+Rel(ag, accessControlServiceRevokeOtpController, "Requests data")
+Rel(ag, accessControlServiceGrantZoneAccessController, "Requests data")
+Rel(ag, accessControlServiceRevokeZoneAccessController, "Requests data")
+Rel(ag, accessControlServiceAddKeyController, "Requests data")
+Rel(ag, accessControlServiceDeleteKeyController, "Requests data")
+Rel(ag, accessControlServiceAssignKeyController, "Requests data")
+Rel(ag, accessControlServiceGetKeyListController, "Requests data")
+Rel(ag, accessControlServiceGetZoneAccessListController, "Requests data")
+
+Rel(web, ag, "Perform commands")
+Rel(web, ag, "Gets data")
+
+@enduml

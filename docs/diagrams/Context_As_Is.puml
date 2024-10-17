@@ -1,0 +1,28 @@
+@startuml
+title Smart Home Context Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+Person(user, "User", "A user of the smart home system")
+Person(installationEngineer, "Installation Engineer", "The Installation Engineer installs, configures, and ensures the proper functioning of smart home systems for users")
+
+System_Ext(web, "SmartHome Web Client", "Provides UI to user for controlling and monitoring of temperature")
+
+System(SmartHomeSystem, "SmartHome System", "System for controlling and monitoring heating and temperature sensors remotely")
+
+System_Ext(heating, "Heating Systems", "External API for controlling heating systems")
+System_Ext(tempSensor, "Temperature Sensors", "External API for retrieving temperature data")
+
+Rel(user, web, "Uses the system")
+Rel(web, SmartHomeSystem, "Performs commands")
+Rel(web, SmartHomeSystem, "Gets data")
+Rel(installationEngineer, SmartHomeSystem, "Set up devices")
+Rel(installationEngineer, heating, "Set up devices")
+Rel(installationEngineer, tempSensor, "Set up devices")
+Rel(SmartHomeSystem,heating,"Fetches current temperature data")
+Rel(SmartHomeSystem,heating,"Sets target temperature data")
+Rel(SmartHomeSystem,tempSensor,"Fetches temperature data")
+
+@enduml
