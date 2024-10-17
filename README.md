@@ -105,13 +105,14 @@ ER-диаграмма создана для микросервиса Infrastruct
 ```shell
 docker-compose up -d
 ```
-- Установить пакеты
-```shell
-dotnet restore
+- Открыть в браузере swagger
+```text
+http://localhost:8080/swagger/index.html
 ```
-- Открыть solution в IDE (например Rider)
-- Запустить проект src/Handlers/Handler.WebApi
-- В браузере откроется окно со swagger
+- Остановить docker compose после завершения работы с сервисом
+```shell
+docker-compose stop
+```
 
 ## Запуск minikube
 

@@ -1,6 +1,20 @@
 version: "3.2"
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: .docker/deploy/Handler.WebApi/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CONNECTIONSTRINGS__MONGODB=mongodb://smart-home-infrastructure:123456@mongodb:27017/smart-home-infrastructure?authSource=admin
+    networks:
+      - ledger
+    depends_on:
+      - mongodb
+
   mongodb:
     image: "mongo"
     environment:
